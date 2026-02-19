@@ -1,4 +1,4 @@
-package com.loan_microservice.infrastructure.adapter.persistence;
+package com.loan_microservice.infraestructure.adapters.persistence;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +28,5 @@ public class LoanEntity {
     private String loanStatus;
 
     private LocalDateTime createdAt;
-
 
 }

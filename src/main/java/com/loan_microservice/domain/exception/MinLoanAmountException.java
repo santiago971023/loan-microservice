@@ -1,4 +1,4 @@
-package com.loan_microservice.application.exception;
+package com.loan_microservice.domain.exception;
 
 public class MinLoanAmountException extends RuntimeException {
     public MinLoanAmountException(String message) {

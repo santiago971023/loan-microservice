@@ -1,4 +1,4 @@
-package com.loan_microservice.application.exception;
+package com.loan_microservice.domain.exception;
 
 public class MaxTermInMonthsException extends RuntimeException {
     public MaxTermInMonthsException(String message) {

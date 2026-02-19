@@ -1,4 +1,4 @@
-package com.loan_microservice.application.ports;
+package com.loan_microservice.application.ports.out;
 
 import com.loan_microservice.domain.model.LoanApplication;
 import reactor.core.publisher.Mono;
