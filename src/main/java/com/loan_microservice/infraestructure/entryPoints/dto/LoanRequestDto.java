@@ -1,15 +1,14 @@
 package com.loan_microservice.infraestructure.entryPoints.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 
 public record LoanRequestDto(
+
         @NotBlank(message = "El documento de identidad del cliente es obligatorio")
+        @Pattern(regexp = "^\\d+$", message = "El campo 'dni' solo debe contener números.")
         String customerDni,
 
         @NotNull(message = "El monto del préstamo es obligatorio")

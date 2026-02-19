@@ -1,0 +1,23 @@
+Server:
+  port: 8081
+
+spring:
+  application:
+    name: loan-service
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/crediya_loans
+    username: postgres
+    password: root
+    pool:
+      initial-size: 5
+      max-size: 20
+
+  # Opcional: Para ver las consultas SQL en consola (util para debug)
+  logging:
+    level:
+      org.springframework.r2dbc: DEBUG
+
+services:
+  user-service:
+    url: http://localhost:8080
+
