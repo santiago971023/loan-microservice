@@ -20,6 +20,10 @@ public record LoanRequestDto(
         Integer termInMonths,
 
         @NotBlank(message = "El tipo de préstamo es obligatorio")
+        @Pattern(
+                regexp = "PERSONAL|VEHICLE|MORTGAGE|EDUCATION",
+                message = "El tipo de préstamo debe ser: PERSONAL, VEHICLE, MORTGAGE o EDUCATION"
+        )
         String loanType
 ) {
 }
