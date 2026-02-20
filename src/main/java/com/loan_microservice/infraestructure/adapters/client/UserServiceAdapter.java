@@ -19,7 +19,7 @@ public class UserServiceAdapter implements UserServiceOutPort {
     @Override
     public Mono<Boolean> existsByDni(String dni) {
         return webClient.get()
-                .uri("/users/exists/{dni}", dni)
+                .uri("/exists/{dni}", dni)
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .onErrorReturn(false);
