@@ -27,6 +27,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(ImpersonationNotAllowedException.class)
+    public ResponseEntity<Map<String, Object>> handleImpersonationNotAllowed(ImpersonationNotAllowedException ex){
+        log.warn("No puede crear una solicitud para otra persona.");
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(InvalidLoanTypeException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidLoanType(InvalidLoanTypeException ex) {
         log.warn("Tipo de préstamo inválido: {}", ex.getMessage());
