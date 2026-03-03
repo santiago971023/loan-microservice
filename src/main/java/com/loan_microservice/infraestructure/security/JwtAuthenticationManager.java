@@ -37,15 +37,16 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
                     Date expiry = claims.getExpiration();
                     String role = claims.get("role", String.class);
                     Long userId = claims.get("userId", Long.class);
+                    String dni = claims.get("dni", String.class);
 
                     // Validación
-                    if(userId == null || role == null || email == null){
+                    if(userId == null || role == null || email == null || dni == null){
                         log.warn("Token rechazado: Faltan Claims obligatorios.");
                         throw new BadCredentialsException("Token Incompleto.");
                     }
 
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-                    CustomPrincipal principal = new CustomPrincipal(userId, email);
+                    CustomPrincipal principal = new CustomPrincipal(userId, dni,  email);
                     return (Authentication) new UsernamePasswordAuthenticationToken(principal, null, List.of(authority));
                 })
                 .onErrorResume(e -> {
