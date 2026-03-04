@@ -1,4 +1,4 @@
-package com.loan_microservice.domain.model;
+package com.loan_microservice.domain.model.loan;
 
 public enum LoanStatus {
 

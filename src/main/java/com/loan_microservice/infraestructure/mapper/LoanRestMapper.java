@@ -1,6 +1,6 @@
 package com.loan_microservice.infraestructure.mapper;
 
-import com.loan_microservice.domain.model.LoanApplication;
+import com.loan_microservice.domain.model.loan.LoanApplication;
 import com.loan_microservice.infraestructure.entryPoints.dto.LoanRequestDto;
 import com.loan_microservice.infraestructure.entryPoints.dto.LoanResponseDto;
 import org.mapstruct.Mapper;
