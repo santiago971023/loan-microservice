@@ -1,4 +1,4 @@
-package com.loan_microservice.domain.model;
+package com.loan_microservice.domain.model.loan;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
