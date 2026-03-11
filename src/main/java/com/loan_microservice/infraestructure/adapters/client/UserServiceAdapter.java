@@ -4,6 +4,7 @@ import com.loan_microservice.application.ports.out.UserServiceOutPort;
 import com.loan_microservice.domain.exception.AuthServiceUnavailableException;
 import com.loan_microservice.domain.exception.CustomerNotFoundException;
 import com.loan_microservice.domain.model.user.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Component
+@Slf4j
 public class UserServiceAdapter implements UserServiceOutPort {
 
     private final WebClient webClient;
@@ -34,23 +36,25 @@ public class UserServiceAdapter implements UserServiceOutPort {
     @Override
     public Mono<User> findUserByDni(String dni) {
         return ReactiveSecurityContextHolder.getContext()
-                        .map(SecurityContext::getAuthentication)
+
+                .doFirst(() -> log.info("Iniciando consulta externa de usuario ára DNI: {}", dni))
+                .map(SecurityContext::getAuthentication)
                 // Validamos seguridad primero
-                        .switchIfEmpty(Mono.error(new IllegalStateException("No hay nadie autenticado.")))
-                        .flatMap(authentication -> {
-                            String token = authentication.getCredentials().toString();
-                            return webClient.get()
-                                    .uri("/{dni}", dni)
-                                    .header("Authorization", "Bearer " + token)
-                                    .retrieve()
-                                    .onStatus(HttpStatusCode::is4xxClientError, response ->
-                                            Mono.error(new CustomerNotFoundException("No encontramos al cliente con DNI: " + dni)))
-                                    .onStatus(HttpStatusCode::is5xxServerError, response ->
-                                            Mono.error(new AuthServiceUnavailableException("El servicio de usuarios está teniendo problemas.")))
-                                    .bodyToMono(User.class);
-                                });
-
-
+                .switchIfEmpty(Mono.error(new IllegalStateException("No hay nadie autenticado.")))
+                .flatMap(authentication -> {
+                    String token = authentication.getCredentials().toString();
+                    return webClient.get()
+                            .uri("/{dni}", dni)
+                            .header("Authorization", "Bearer " + token)
+                            .retrieve()
+                            .onStatus(HttpStatusCode::is4xxClientError, response ->
+                                    Mono.error(new CustomerNotFoundException("No encontramos al cliente con DNI: " + dni)))
+                            .onStatus(HttpStatusCode::is5xxServerError, response ->
+                                    Mono.error(new AuthServiceUnavailableException("El servicio de usuarios está teniendo problemas.")))
+                            .bodyToMono(User.class)
+                            .doOnNext(user -> log.info("Usuario recuperado exitosamente para DNI: {}", dni))
+                            .doOnError(e -> log.error("Error técnico al consultar auth-service para DNI {}: {}", dni, e.getMessage()));
+                });
     }
 
 }
