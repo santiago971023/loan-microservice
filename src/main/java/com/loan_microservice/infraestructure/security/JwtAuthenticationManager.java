@@ -34,7 +34,6 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
                     // Extraigo los datos
                     String email = claims.get("email", String.class);
-                    Date expiry = claims.getExpiration();
                     String role = claims.get("role", String.class);
                     Long userId = claims.get("userId", Long.class);
                     String dni = claims.get("dni", String.class);
@@ -46,8 +45,8 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
                     }
 
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-                    CustomPrincipal principal = new CustomPrincipal(userId, dni,  email);
-                    return (Authentication) new UsernamePasswordAuthenticationToken(principal, null, List.of(authority));
+                    CustomPrincipal principal = new CustomPrincipal(userId, dni, email, token);
+                    return (Authentication) new UsernamePasswordAuthenticationToken(principal, token, List.of(authority));
                 })
                 .onErrorResume(e -> {
                     log.error("Error validando JWT: {}", e.getMessage());
