@@ -1,10 +1,6 @@
 package com.loan_microservice.infraestructure.entryPoints.exception;
 
-import com.loan_microservice.domain.exception.CustomerNotFoundException;
-import com.loan_microservice.domain.exception.InvalidLoanTypeException;
-import com.loan_microservice.domain.exception.MaxTermInMonthsException;
-import com.loan_microservice.domain.exception.MinLoanAmountException;
-import com.loan_microservice.domain.exception.MinTermInMonthsException;
+import com.loan_microservice.domain.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +61,25 @@ public class GlobalExceptionHandler {
         log.warn("Error de validación: {}", errors);
         return buildErrorResponse(HttpStatus.BAD_REQUEST, errors);
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedRequest(IllegalStateException ex){
+        log.warn("Error de autorización: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthServiceUnavailable(AuthServiceUnavailableException ex){
+        log.warn("El Auth Microservice no se encuentra disponible en este momento.");
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAnythingElse(Exception ex){
+        log.error("Error inesperado: ", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Ha ocurrido un error inesperado en el servidor, por favor contacte con soporte.");
+    }
+
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
