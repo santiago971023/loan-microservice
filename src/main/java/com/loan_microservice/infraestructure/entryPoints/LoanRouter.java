@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 
 @Configuration
 public class LoanRouter {
@@ -21,6 +22,10 @@ public class LoanRouter {
                 POST(PATH)
                         .and(accept(MediaType.APPLICATION_JSON)),
                 loanHandler::createLoan
+        ).andRoute(
+            GET(PATH + "/reviews")
+                    .and(accept(MediaType.APPLICATION_JSON)),
+                loanHandler::listLoanApps
         );
     }
 }

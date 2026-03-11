@@ -1,5 +1,8 @@
 package com.loan_microservice.domain.model.pageable;
 
+import lombok.Builder;
+
+@Builder
 public class DomainPageable {
 
     private int pageNumber;

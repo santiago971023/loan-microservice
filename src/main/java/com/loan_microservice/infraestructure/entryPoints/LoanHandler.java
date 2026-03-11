@@ -1,6 +1,11 @@
 package com.loan_microservice.infraestructure.entryPoints;
 
 import com.loan_microservice.application.ports.in.CreateLoanInputPort;
+import com.loan_microservice.application.ports.in.GetLoanApplicationsForReviewInputPort;
+import com.loan_microservice.domain.model.loan.LoanApplicationDetail;
+import com.loan_microservice.domain.model.loan.LoanStatus;
+import com.loan_microservice.domain.model.pageable.DomainPageable;
+import com.loan_microservice.domain.model.pageable.PaginationResponse;
 import com.loan_microservice.infraestructure.entryPoints.dto.LoanRequestDto;
 import com.loan_microservice.infraestructure.entryPoints.exception.ImpersonationNotAllowedException;
 import com.loan_microservice.infraestructure.mapper.LoanRestMapper;
@@ -12,20 +17,27 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.LineNumberInputStream;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class LoanHandler {
 
     private final CreateLoanInputPort createLoanInputPort;
+    private final GetLoanApplicationsForReviewInputPort getLoanApplicationsForReviewInputPort;
     private final LoanRestMapper loanRestMapper;
     private final RequestValidator requestValidator;
 
-    public LoanHandler(CreateLoanInputPort createLoanInputPort, LoanRestMapper loanRestMapper, RequestValidator requestValidator) {
+    public LoanHandler(CreateLoanInputPort createLoanInputPort, GetLoanApplicationsForReviewInputPort getLoanApplicationsForReviewInputPort, LoanRestMapper loanRestMapper, RequestValidator requestValidator) {
         this.createLoanInputPort = createLoanInputPort;
+        this.getLoanApplicationsForReviewInputPort = getLoanApplicationsForReviewInputPort;
         this.loanRestMapper = loanRestMapper;
         this.requestValidator = requestValidator;
     }
@@ -64,5 +76,31 @@ public class LoanHandler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(loanResponse)
                 );
+    }
+
+
+    public Mono<ServerResponse> listLoanApps(ServerRequest serverRequest){
+        int page = serverRequest.queryParam("page").map(Integer::parseInt).orElse(0);
+        int size = serverRequest.queryParam("size").map(Integer::parseInt).orElse(10);
+
+        DomainPageable domainPageable = DomainPageable.builder()
+                .pageNumber(page)
+                .pageSize(size)
+                .build();
+
+        List<String> statusesString = serverRequest.queryParam("statuses")
+                .map(s -> Arrays.asList(s.split(",")))
+                .orElse(List.of("PENDING_REVIEW"));
+
+        List<LoanStatus> statusesEnum = statusesString.stream()
+                .map(String::toUpperCase)
+                .map(LoanStatus::valueOf)
+                .toList();
+
+        Mono<PaginationResponse<LoanApplicationDetail>> result = getLoanApplicationsForReviewInputPort.getLoanApps(statusesEnum, domainPageable);
+
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(result, PaginationResponse.class);
     }
 }
