@@ -1,12 +1,15 @@
 package com.loan_microservice.infraestructure.entryPoints;
 
+import com.loan_microservice.application.ports.in.ApproveOrRejectLoanInputPort;
 import com.loan_microservice.application.ports.in.CreateLoanInputPort;
 import com.loan_microservice.application.ports.in.GetLoanApplicationsForReviewInputPort;
+import com.loan_microservice.domain.model.loan.LoanApplication;
 import com.loan_microservice.domain.model.loan.LoanApplicationDetail;
 import com.loan_microservice.domain.model.loan.LoanStatus;
 import com.loan_microservice.domain.model.pageable.DomainPageable;
 import com.loan_microservice.domain.model.pageable.PaginationResponse;
 import com.loan_microservice.infraestructure.entryPoints.dto.LoanRequestDto;
+import com.loan_microservice.infraestructure.entryPoints.dto.UpdateLoanStatusRequest;
 import com.loan_microservice.infraestructure.entryPoints.exception.ImpersonationNotAllowedException;
 import com.loan_microservice.infraestructure.mapper.LoanRestMapper;
 import com.loan_microservice.infraestructure.security.CustomPrincipal;
@@ -34,12 +37,14 @@ public class LoanHandler {
     private final GetLoanApplicationsForReviewInputPort getLoanApplicationsForReviewInputPort;
     private final LoanRestMapper loanRestMapper;
     private final RequestValidator requestValidator;
+    private final ApproveOrRejectLoanInputPort approveOrRejectLoanInputPort;
 
-    public LoanHandler(CreateLoanInputPort createLoanInputPort, GetLoanApplicationsForReviewInputPort getLoanApplicationsForReviewInputPort, LoanRestMapper loanRestMapper, RequestValidator requestValidator) {
+    public LoanHandler(CreateLoanInputPort createLoanInputPort, GetLoanApplicationsForReviewInputPort getLoanApplicationsForReviewInputPort, LoanRestMapper loanRestMapper, RequestValidator requestValidator, ApproveOrRejectLoanInputPort approveOrRejectLoanInputPort) {
         this.createLoanInputPort = createLoanInputPort;
         this.getLoanApplicationsForReviewInputPort = getLoanApplicationsForReviewInputPort;
         this.loanRestMapper = loanRestMapper;
         this.requestValidator = requestValidator;
+        this.approveOrRejectLoanInputPort = approveOrRejectLoanInputPort;
     }
 
     public Mono<ServerResponse> createLoan(ServerRequest serverRequest) {
@@ -103,4 +108,39 @@ public class LoanHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(result, PaginationResponse.class);
     }
+
+    public Mono<ServerResponse> updateLoanStatus(ServerRequest serverRequest) {
+
+        // 1. Extraemos el ID de forma segura dentro del flujo reactivo
+        Mono<Long> idMono = Mono.just(serverRequest.pathVariable("id"))
+                .map(Long::parseLong)
+                .onErrorMap(e -> new IllegalAccessException("El ID del préstamo debe ser un número válido."));
+
+        // 2. Procesamos el cuerpo de la petición y validamos el DTO
+        Mono<UpdateLoanStatusRequest> dtoMono = serverRequest.bodyToMono(UpdateLoanStatusRequest.class)
+               .switchIfEmpty(Mono.error(new IllegalArgumentException("El cuerpo de la petición es obligatorio")))
+               .flatMap(requestValidator::validate);
+
+        // 3. Obtenemos el usuario autenticado
+        Mono<CustomPrincipal> principalMono = ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> (CustomPrincipal) ctx.getAuthentication().getPrincipal());
+
+        // 4. Combino y ejecuto la lógica.
+        return Mono.zip(idMono, dtoMono, principalMono)
+                .flatMap(tuple -> {
+                    Long loanId = tuple.getT1();
+                    UpdateLoanStatusRequest dto = tuple.getT2();
+
+                    log.info("Procesando actualización para la solicitud #{} al nuevo estado {}.", loanId, dto.getNewStatus());
+
+                    return approveOrRejectLoanInputPort.changeLoanStatus(loanId, dto.getNewStatus());
+                })
+                .flatMap(loanApplication -> ServerResponse.ok().bodyValue(loanApplication));
+
+
+
+    }
+
+
+
 }
