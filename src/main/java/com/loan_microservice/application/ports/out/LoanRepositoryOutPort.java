@@ -12,4 +12,5 @@ public interface LoanRepositoryOutPort {
 
     Mono<LoanApplication> save(LoanApplication loanApplication);
     Mono<PaginationResponse<LoanApplication>> findLoanByStatus(List<LoanStatus> status, DomainPageable pageable);
+    Mono<LoanApplication> findLoanApplicationById(Long id);
 }

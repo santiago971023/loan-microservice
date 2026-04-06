@@ -52,4 +52,11 @@ public class LoanPersistenceAdapter implements LoanRepositoryOutPort {
         );
 
     }
+
+    @Override
+    public Mono<LoanApplication> findLoanApplicationById(Long id) {
+        return loanRepository.findById(id)
+                .map(mapper::toDomain);
+    }
+
 }
