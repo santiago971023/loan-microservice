@@ -1,6 +1,7 @@
 package com.loan_microservice.infraestructure.entryPoints.exception;
 
 import com.loan_microservice.domain.exception.*;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +74,14 @@ public class GlobalExceptionHandler {
         log.warn("El Auth Microservice no se encuentra disponible en este momento.");
         return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedRequest(ConstraintViolationException ex){
+        log.warn("Error en la validación de datos de entrada: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAnythingElse(Exception ex){

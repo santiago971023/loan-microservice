@@ -35,6 +35,7 @@ public class SecurityConfig {
                         // Rutas protegidas por role
                         .pathMatchers("/api/v1/loans").hasAnyRole("CUSTOMER")
                                 .pathMatchers("/api/v1/loans/reviews").hasAnyRole("CONSULTANT")
+                                .pathMatchers("/api/v1/loans/{id}/newStatus").hasAnyRole("CONSULTANT")
 
                         // Rutas no especificadas.
                         .anyExchange().authenticated()
